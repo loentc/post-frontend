@@ -3,6 +3,7 @@ import { Col, Modal, Row, Tag } from "antd";
 import HTMLReactParser from "html-react-parser/lib/index";
 import "./post-modal.css";
 import { PropModal } from "@/interface/post-modal.interface";
+import moment from "moment";
 
 const PostModal = ({
   isModalOpen,
@@ -35,7 +36,7 @@ const PostModal = ({
           <p className="title_style">Posted At :</p>
         </Col>
         <Col span={20}>
-          <p>{data.postedAt}</p>
+          <p>{moment(data.postedAt).format("DD/MM/YYYY HH:mm:ss")}</p>
         </Col>
       </Row>
       {/* posted by */}
