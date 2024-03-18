@@ -6,6 +6,7 @@ import moment from "moment";
 import PostModal from "./post-modal";
 import "./post-table.css";
 import { PostResponse } from "@/interface/post-response.interface";
+import { useSession } from "next-auth/react";
 
 const { Search } = Input;
 
@@ -25,20 +26,32 @@ function PostTable() {
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
 
+  const { data: session }: { data: any } = useSession();
+
   const handleFetchData = async (page: number) => {
     setLoading(true);
-    const postApi = await axios.get<PostResponse>(
-      `http://localhost:8100/post?pageSize=${pageSize}&page=${page}`
-    );
-    setPost(postApi.data.data);
-    setTotalDocs(postApi.data.totalDoc);
+    const postApi = await axios
+      .get<PostResponse>(
+        `http://localhost:8100/post?pageSize=${pageSize}&page=${page}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session?.user.accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      )
+      .then((value) => {
+        setPost(value.data.data);
+        setTotalDocs(value.data.totalDoc);
+      })
+      .catch(console.log);
     setLoading(false);
   };
 
   useEffect(() => {
     handleFetchData(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session, session?.user, session?.user.accessToken]);
 
   const onSearch = (value: string) => {
     setSearch(value);

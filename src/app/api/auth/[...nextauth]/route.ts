@@ -1,6 +1,7 @@
 import axios from "axios";
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from 'next-auth/providers/credentials'
+import getConfig from 'next/config';
 
 const authOptions: NextAuthOptions = {
     providers: [
@@ -13,7 +14,12 @@ const authOptions: NextAuthOptions = {
             },
             async authorize(credentials) {
                 try {
-                    const backendUrl = process.env.BACKEND_URL + 'auth/login'
+
+                    const { serverRuntimeConfig, publicRuntimeConfig } = getConfig();
+
+
+                    const apiUrl = serverRuntimeConfig.apiUrl || publicRuntimeConfig.apiUrl;
+                    const backendUrl = apiUrl + 'auth/login'
                     const response = await axios.post(backendUrl, credentials);
 
                     const data = response.data;
