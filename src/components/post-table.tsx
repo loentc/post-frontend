@@ -7,6 +7,7 @@ import PostModal from "./post-modal";
 import "./post-table.css";
 import { PostResponse } from "@/interface/post-response.interface";
 import { useSession } from "next-auth/react";
+import axiosInstance from "@/config/axios";
 
 const { Search } = Input;
 
@@ -23,35 +24,26 @@ function PostTable() {
   });
   const [search, setSearch] = useState("");
   const [totalDocs, setTotalDocs] = useState(10);
+  const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
 
-  const { data: session }: { data: any } = useSession();
-
-  const handleFetchData = async (page: number) => {
-    setLoading(true);
-    const postApi = await axios
-      .get<PostResponse>(
-        `http://localhost:8100/post?pageSize=${pageSize}&page=${page}`,
-        {
-          headers: {
-            Authorization: `Bearer ${session?.user.accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      )
-      .then((value) => {
-        setPost(value.data.data);
-        setTotalDocs(value.data.totalDoc);
-      })
-      .catch(console.log);
-    setLoading(false);
-  };
-
   useEffect(() => {
-    handleFetchData(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, session?.user, session?.user.accessToken]);
+    const handleFetchData = async () => {
+      setLoading(true);
+      const postApi = await axiosInstance
+        .get<PostResponse>(
+          `http://localhost:8100/post?pageSize=${pageSize}&page=${page}&search=${search}`,
+        )
+        .then((value) => {
+          setPost(value.data.data);
+          setTotalDocs(value.data.totalDoc);
+        })
+        .catch(console.log);
+      setLoading(false);
+    };
+    handleFetchData();
+  }, [page, pageSize, search]);
 
   const onSearch = (value: string) => {
     setSearch(value);
@@ -65,6 +57,10 @@ function PostTable() {
     setIsModalOpen(false);
   };
 
+  const handlePaginate = (page: number) => {
+    setPage(page)
+  }
+
   const columns: TableProps<PostDataType>["columns"] = [
     {
       title: "No.",
@@ -72,20 +68,20 @@ function PostTable() {
       key: "key",
       width: "5%",
       sorter: (a, b) => Number(a.key) - Number(b.key),
-      onFilter: (value, record) => {
-        return (
-          String(record.key).includes(value as string) ||
-          String(record.title)
-            .toLowerCase()
-            .includes((value as string).toLowerCase()) ||
-          String(record.postedBy)
-            .toLowerCase()
-            .includes((value as string).toLowerCase()) ||
-          record.tags.filter((item) => item.includes(value as string))
-            .length !== 0
-        );
-      },
-      filteredValue: [search],
+      // onFilter: (value, record) => {
+      //   return (
+      //     String(record.key).includes(value as string) ||
+      //     String(record.title)
+      //       .toLowerCase()
+      //       .includes((value as string).toLowerCase()) ||
+      //     String(record.postedBy)
+      //       .toLowerCase()
+      //       .includes((value as string).toLowerCase()) ||
+      //     record.tags.filter((item) => item.includes(value as string))
+      //       .length !== 0
+      //   );
+      // },
+      // filteredValue: [search],
     },
     {
       title: "Title",
@@ -140,7 +136,7 @@ function PostTable() {
           <Search
             placeholder="Search"
             onSearch={onSearch}
-            onChange={(value) => setSearch(value.target.value)}
+            // onChange={(value) => setSearch(value.target.value)}
             style={{ width: 320 }}
             className="m-4"
           />
@@ -153,7 +149,7 @@ function PostTable() {
           pagination={{
             pageSize: pageSize,
             total: totalDocs,
-            onChange: (page) => handleFetchData(page),
+            onChange: (page) => handlePaginate(page),
             showSizeChanger: false,
             position: ["bottomRight"],
             className: "pagination_style",

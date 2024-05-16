@@ -1,5 +1,6 @@
 import axios from "axios";
 import NextAuth, { NextAuthOptions } from "next-auth";
+import { JWT } from "next-auth/jwt";
 import CredentialsProvider from 'next-auth/providers/credentials'
 import getConfig from 'next/config';
 
@@ -43,13 +44,13 @@ const authOptions: NextAuthOptions = {
     },
     callbacks: {
         async jwt({ token, user }) {
-            if (user) return { ...token, ...user }
+            if (user) return { ...token, ...user } as JWT
             return token
         },
         async session({ token, session }) {
             session.user = token
             return session
-        }
+        },
     }
 }
 
